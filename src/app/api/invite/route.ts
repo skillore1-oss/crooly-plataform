@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   // Invite user — Supabase sends the invitation email automatically
   const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${siteUrl}/auth/setup`,
+    redirectTo: `${siteUrl}/auth/callback?next=/auth/setup`,
   })
 
   if (error) {
