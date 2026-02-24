@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -11,6 +11,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash.includes('access_token=') && hash.includes('type=invite')) {
+      window.location.replace('/auth/setup' + hash)
+    }
+  }, [])
 
   async function handleLogin() {
     setLoading(true)
