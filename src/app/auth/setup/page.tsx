@@ -2,30 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 
 export default function AuthSetup() {
   const [ready, setReady] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    // Listen for the SIGNED_IN event that fires when Supabase
-    // processes the invite token in the URL hash
+    // Save email from session when auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         setReady(true)
+        setUserEmail(session.user.email ?? null)
       }
     })
 
-    // Also check if session already exists (direct page visit)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true)
+      if (session) {
+        setReady(true)
+        setUserEmail(session.user.email ?? null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -39,29 +40,28 @@ export default function AuthSetup() {
     setSaving(true)
     setError('')
 
-    // Get email before updating password
-    const { data: { user } } = await supabase.auth.getUser()
-    const email = user?.email
-
     const { error: updateError } = await supabase.auth.updateUser({ password })
 
     if (updateError) {
-      setError(updateError.message)
+      setError(`Error al guardar contraseña: ${updateError.message}`)
       setSaving(false)
       return
     }
 
-    // Sign in with new password to ensure a fresh session
-    if (email) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInError) {
-        setError('Contraseña guardada, pero hubo un error al iniciar sesión. Intenta entrar manualmente.')
-        setSaving(false)
-        return
-      }
+    if (!userEmail) {
+      setError('No se detectó el email de la sesión. Intenta abrir el link de invitación de nuevo.')
+      setSaving(false)
+      return
     }
 
-    // Hard redirect to ensure the new session is picked up
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: userEmail, password })
+
+    if (signInError) {
+      setError(`Contraseña guardada. Inicia sesión en /auth con: ${userEmail}`)
+      setSaving(false)
+      return
+    }
+
     window.location.href = '/cliente'
   }
 
@@ -77,6 +77,9 @@ export default function AuthSetup() {
           <p className="text-slate-500 text-sm text-center py-4">Verificando invitación...</p>
         ) : (
           <div className="space-y-4">
+            {userEmail && (
+              <p className="text-slate-500 text-xs text-center">Configurando acceso para <span className="text-slate-300">{userEmail}</span></p>
+            )}
             <div>
               <label className="text-slate-300 text-sm mb-1 block">Nueva contraseña</label>
               <input
