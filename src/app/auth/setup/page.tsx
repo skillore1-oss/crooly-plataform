@@ -53,10 +53,16 @@ export default function AuthSetup() {
 
     // Sign in with new password to ensure a fresh session
     if (email) {
-      await supabase.auth.signInWithPassword({ email, password })
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) {
+        setError('Contraseña guardada, pero hubo un error al iniciar sesión. Intenta entrar manualmente.')
+        setSaving(false)
+        return
+      }
     }
 
-    router.push('/cliente')
+    // Hard redirect to ensure the new session is picked up
+    window.location.href = '/cliente'
   }
 
   return (
