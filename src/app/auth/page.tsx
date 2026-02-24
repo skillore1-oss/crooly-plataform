@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
+// Capture hash at module load time, before Supabase initializes and clears it
+const initialHash = typeof window !== 'undefined' ? window.location.hash : ''
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -13,9 +16,8 @@ export default function LoginPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    const hash = window.location.hash
-    if (hash.includes('access_token=') && hash.includes('type=invite')) {
-      window.location.replace('/auth/setup' + hash)
+    if (initialHash.includes('access_token=') && initialHash.includes('type=invite')) {
+      window.location.replace('/auth/setup' + initialHash)
     }
   }, [])
 
