@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   const resend = new Resend(resendKey)
 
   const { error: emailError } = await resend.emails.send({
-    from: 'Crooly <onboarding@resend.dev>',
+    from: 'Crooly <invitaciones@crooly.cl>',
     to: email,
     subject: 'Tu acceso a Crooly está listo',
     html: `
