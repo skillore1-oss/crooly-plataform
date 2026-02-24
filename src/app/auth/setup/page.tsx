@@ -39,12 +39,21 @@ export default function AuthSetup() {
     setSaving(true)
     setError('')
 
-    const { error } = await supabase.auth.updateUser({ password })
+    // Get email before updating password
+    const { data: { user } } = await supabase.auth.getUser()
+    const email = user?.email
 
-    if (error) {
-      setError(error.message)
+    const { error: updateError } = await supabase.auth.updateUser({ password })
+
+    if (updateError) {
+      setError(updateError.message)
       setSaving(false)
       return
+    }
+
+    // Sign in with new password to ensure a fresh session
+    if (email) {
+      await supabase.auth.signInWithPassword({ email, password })
     }
 
     router.push('/cliente')
