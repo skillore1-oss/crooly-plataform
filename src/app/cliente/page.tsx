@@ -11,7 +11,7 @@ const MODULES = [
   { id: 'roadmap',     label: 'Roadmap',     desc: 'Hitos y tareas',          href: '/cliente/roadmap',  active: true  },
   { id: 'kpis',        label: 'KPIs',         desc: 'Métricas semanales',       href: '/cliente/kpis',     active: true  },
   { id: 'sesiones',    label: 'Sesiones',     desc: 'Notas y documentación',    href: '/cliente/sesiones', active: true  },
-  { id: 'diagnostico', label: 'Diagnóstico',  desc: 'Scorecard de la empresa',  href: '#',                 active: false },
+  { id: 'diagnostico', label: 'Diagnóstico',  desc: 'Scorecard de la empresa',  href: '/cliente/diagnostico', active: true  },
   { id: 'playbooks',   label: 'Playbooks',    desc: 'Guías de acción',          href: '#',                 active: false },
 ]
 

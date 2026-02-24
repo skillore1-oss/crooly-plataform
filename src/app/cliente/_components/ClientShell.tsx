@@ -4,10 +4,11 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const NAV = [
-  { id: 'inicio',   label: 'Inicio',   href: '/cliente' },
-  { id: 'roadmap',  label: 'Roadmap',  href: '/cliente/roadmap' },
-  { id: 'kpis',     label: 'KPIs',     href: '/cliente/kpis' },
-  { id: 'sesiones', label: 'Sesiones', href: '/cliente/sesiones' },
+  { id: 'inicio',      label: 'Inicio',      href: '/cliente' },
+  { id: 'diagnostico', label: 'Diagnóstico', href: '/cliente/diagnostico' },
+  { id: 'roadmap',     label: 'Roadmap',     href: '/cliente/roadmap' },
+  { id: 'kpis',        label: 'KPIs',        href: '/cliente/kpis' },
+  { id: 'sesiones',    label: 'Sesiones',    href: '/cliente/sesiones' },
 ]
 
 type Props = {

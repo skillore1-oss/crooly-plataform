@@ -102,6 +102,8 @@ export default function DiagnosticoPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [companyName, setCompanyName] = useState('')
+  const [narrative, setNarrative] = useState<string | null>(null)
+  const [generatingNarrative, setGeneratingNarrative] = useState(false)
 
   const router = useRouter()
   const params = useParams()
@@ -122,7 +124,7 @@ export default function DiagnosticoPage() {
 
       const { data: diagnostic } = await supabase
         .from('diagnostics')
-        .select('credibilidad, capacidad_comercial, posicionamiento, operacion')
+        .select('credibilidad, capacidad_comercial, posicionamiento, operacion, narrative')
         .eq('company_id', company_id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -135,6 +137,7 @@ export default function DiagnosticoPage() {
           posicionamiento: diagnostic.posicionamiento,
           operacion: diagnostic.operacion,
         })
+        setNarrative(diagnostic.narrative ?? null)
       }
 
       setLoading(false)
@@ -160,11 +163,11 @@ export default function DiagnosticoPage() {
       operacion: calcAvg(['o1', 'o2', 'o3'], answers),
     }
 
-    const { error: dbError } = await supabase.from('diagnostics').insert({
-      company_id,
-      ...computed,
-      answers,
-    })
+    const { data: inserted, error: dbError } = await supabase
+      .from('diagnostics')
+      .insert({ company_id, ...computed, answers })
+      .select('id')
+      .single()
 
     if (dbError) {
       setError(`Error al guardar: ${dbError.message}`)
@@ -174,6 +177,22 @@ export default function DiagnosticoPage() {
 
     setScores(computed)
     setSaving(false)
+
+    // Generate narrative in background
+    if (inserted?.id) {
+      setGeneratingNarrative(true)
+      try {
+        const res = await fetch('/api/generate-narrative', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ diagnostic_id: inserted.id, ...computed }),
+        })
+        const json = await res.json()
+        if (json.narrative) setNarrative(json.narrative)
+      } finally {
+        setGeneratingNarrative(false)
+      }
+    }
   }
 
   if (loading) {
@@ -254,8 +273,28 @@ export default function DiagnosticoPage() {
               </div>
             </div>
 
+            {/* Narrative */}
+            {generatingNarrative ? (
+              <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800">
+                <h3 className="text-base font-semibold text-slate-200 mb-4">Análisis</h3>
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-3 bg-slate-800 rounded w-full" />
+                  <div className="h-3 bg-slate-800 rounded w-5/6" />
+                  <div className="h-3 bg-slate-800 rounded w-4/6" />
+                  <div className="h-3 bg-slate-800 rounded w-full mt-4" />
+                  <div className="h-3 bg-slate-800 rounded w-3/4" />
+                </div>
+                <p className="text-slate-500 text-xs mt-4">Generando análisis con IA...</p>
+              </div>
+            ) : narrative ? (
+              <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800">
+                <h3 className="text-base font-semibold text-slate-200 mb-4">Análisis</h3>
+                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{narrative}</p>
+              </div>
+            ) : null}
+
             <button
-              onClick={() => { setScores(null); setAnswers({}) }}
+              onClick={() => { setScores(null); setAnswers({}); setNarrative(null) }}
               className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3 rounded-xl transition-colors text-sm"
             >
               Hacer nuevo diagnóstico
